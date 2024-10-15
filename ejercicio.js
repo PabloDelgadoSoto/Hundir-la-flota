@@ -16,15 +16,7 @@ const segundo = {
     2: [1, 1],
     3: [1, -1],
 }
-
-const dificultad = {
-    '1': [10, 10],
-    '2': [16, 40],
-    '3': [21, 99]
-};
-var dif = '1';
-var tablero = dificultad[dif][0];
-var minas = dificultad[dif][1];
+var tablero = 10;
 
 window.onload = function () {
     escrito = document.getElementById('perder');
@@ -55,90 +47,34 @@ const ponerBarcos = function () {
     for (let i = 0; i < cantidad; i++) {
         let n = Math.floor(Math.random() * 4);
         for (let j = 0; j < longitudes[i]; j++) {
+            do{
                 barcos[i][j][0] = colocar();
-                prohibir.push(barcos[i][j][0]);
-            while (calcularEspacio(barcos[i][0][0], barcos[i].length-1)){
-                barcos[i][j][0] = colocar();
-                prohibir.push(barcos[i][j][0]);
-            }
-            
-            if(j > 0){
-                if(!continuar(i, j, n)){
-                    j=-1;
+            }while(prohibir.includes(barcos[i][j][0]));
+            prohibir.includes(barcos[i][j][0])?"":prohibir.push(barcos[i][j][0]);
+            console.log(barcos[i][j][0])
+            if (j > 0) {
+                if (!continuar(i, j, n)) {
+                    j = -1;
                 }
                 barcos[i][0][1] = false;
             }
         }
+        barcos[i].forEach(posicion => {
+            prohibir.includes(posicion[0])?"":prohibir.push(posicion[0]);
+        });
     }
-    verBarcos(); 
 };
-//[][]elegir barco,    [][][]que parte del barco
-//impedir que salga negativo
 
 const continuar = function (i, j, n) {
     //ubicacion anterior
     let b = barcos[i][j - 1][0].split('-');
     b[segundo[n][0]] = parseInt(b[segundo[n][0]]) + parseInt(segundo[n][1]);
     let id = b[0] + '-' + b[1];
-    if(desbordar(b[0]) || desbordar(b[1]) || prohibir.includes(id)){
+    if (desbordar(b[0]) || desbordar(b[1]) || prohibir.includes(id)) {
         return false;
     }
     barcos[i][j][0] = id;
     barcos[i][j][1] = false;
-    prohibir.push(barcos[i][j][0]);
-    return true;
-};
-
-const verBarcos = function(){
-    barcos.forEach(barco => {
-        barco.forEach(posicion => {
-            let ph = document.getElementById(posicion[0]);
-            ph.setAttribute('style', 'background-color:pink')
-        });
-    });
-}
-
-const calcularEspacio = function (escogido, l) {
-    let marca = escogido.split('-');
-    let fila = marca[0];
-    let columna = marca[1];
-    let fT = reservarFila(fila, l);
-    let cT = reservarColumna(columna, l);
-    //si no se hace asi por alguna razon no ejecuta ambas
-    prohibir.push(escogido);
-    if (cT && fT) {
-        return true;
-    }
-    return false;
-};
-
-const reservarFila = function (fila, l) {
-    fila = parseInt(fila);
-    for (i = fila - l; i < fila; i++) {
-        if (prohibir.includes(i + '-' + fila) || desbordar(i)) {
-            return false;
-        }
-    }
-    for (i = fila + 1; i <= fila + l; i++) {
-        if (prohibir.includes(i + '-' + fila) || desbordar(i)) {
-            return false;
-        }
-    }
-    return true;
-};
-
-const reservarColumna = function (columna, l) {
-    columna = parseInt(columna);
-    for (i = columna - l; i < columna; i++) {
-        if (prohibir.includes(columna + '-' + i) || desbordar(i)) {
-            return false;
-        }
-    }
-    for (i = columna + 1; i <= columna + l; i++) {
-        if (prohibir.includes(columna + '-' + i) || desbordar(i)) {
-            return false;
-        }
-    }
     return true;
 };
 
@@ -162,27 +98,49 @@ const hacerClic = function (event) {
 
 const marcarXClic = function (id) {
     let marca = document.getElementById(id);
-    if (inArray(prohibir, id)) {
-        perder();
-        return;
-    }
-    if (inArray(rojos, id)) {
+    if(verBarcos(id)){
         marca.setAttribute('style', 'background-color:red');
-        marca.innerHTML = calcularAlrededor(id);
-        contarCasilla(id);
-        ganar();
+        comprobarDestruido();
         return;
     }
-    marca.setAttribute('style', 'background-color:green');
-    visitados.push(id);
-    contarCasilla(id);
-    let mostrar = recorrer(marca);
-    for (let i = 0; i < mostrar.length; i++) {
-        if (!inArray(visitados, mostrar[i])) {
-            marcarXClic(mostrar[i]);
-            visitados.push(mostrar[i]);
-        }
-    }
-    ganar();
-    visto = [];
+    marca.setAttribute('style', 'background-color:white');
 };
+
+const verBarcos = function (hit) {
+    let comprobar = false;
+    barcos.forEach(barco => {
+        barco.forEach(posicion => {
+            if(posicion[0]==hit){
+                posicion[1] = true;
+                comprobar = true;
+            }
+        });
+    });
+    return comprobar;
+}
+
+const comprobarDestruido = function(){
+    let ganar = true;
+    barcos.forEach(barco => {
+        let destruido = true;
+        barco.forEach(posicion => {
+            if(!posicion[1]){
+                destruido = false;
+            }
+        });
+        if(destruido){
+            barco.forEach(posicion => {
+                let marca = document.getElementById(posicion[0]);
+                marca.setAttribute('style', 'background-color:black');
+            });
+            if(!barco[barco.length]){
+                ganar = false;
+            }
+        }
+    });
+    ganar();
+}
+
+const ganar = function(){
+    alert('Enhorabuena');
+}
