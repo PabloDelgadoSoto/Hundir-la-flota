@@ -2,19 +2,14 @@ let table;
 let prohibir = [];
 let cantidad = 4;
 let longitudes = [2, 3, 4, 3];
-let barcos = [
-    [[], []],
-    [[], [], []],
-    [[], [], [], []],
-    [[], [], []]
-];
+let barcos = [[[], []],[[], [], []],[[], [], [], []],[[], [], []]];
 var clicado = [];
 
 const segundo = {
-    0: [0, 1],
-    1: [0, -1],
-    2: [1, 1],
-    3: [1, -1],
+    0: [0, 1, "barcoDown"],
+    1: [0, -1, "barcoUp"],
+    2: [1, 1, "barcoRight"],
+    3: [1, -1, "barcoLeft"]
 }
 var tablero = 10;
 
@@ -49,9 +44,13 @@ const ponerBarcos = function () {
         for (let j = 0; j < longitudes[i]; j++) {
             do{
                 barcos[i][j][0] = colocar();
+                if(n==3 || n==1){
+                    barcos[i][j][2] = segundo[n-1][2];
+                }else{
+                    barcos[i][j][2] = segundo[n+1][2];
+                }
             }while(prohibir.includes(barcos[i][j][0]));
             prohibir.includes(barcos[i][j][0])?"":prohibir.push(barcos[i][j][0]);
-            console.log(barcos[i][j][0])
             if (j > 0) {
                 if (!continuar(i, j, n)) {
                     j = -1;
@@ -66,8 +65,14 @@ const ponerBarcos = function () {
 };
 
 const continuar = function (i, j, n) {
-    //ubicacion anterior
     let b = barcos[i][j - 1][0].split('-');
+    if(j!=1){
+        if(n==2 || n==3){
+            barcos[i][j-1][2] = "barcoHorizontal";
+        }else{
+            barcos[i][j-1][2] = "barcoVertical";
+        }
+    }
     b[segundo[n][0]] = parseInt(b[segundo[n][0]]) + parseInt(segundo[n][1]);
     let id = b[0] + '-' + b[1];
     if (desbordar(b[0]) || desbordar(b[1]) || prohibir.includes(id)) {
@@ -75,6 +80,7 @@ const continuar = function (i, j, n) {
     }
     barcos[i][j][0] = id;
     barcos[i][j][1] = false;
+    barcos[i][j][2] = segundo[n][2];
     return true;
 };
 
@@ -99,7 +105,7 @@ const hacerClic = function (event) {
 const marcarXClic = function (id) {
     let marca = document.getElementById(id);
     if(verBarcos(id)){
-        marca.setAttribute('style', 'background-color:red');
+        marca.setAttribute('style', 'background-image:url(explosion.jpg);background-size:100% 100%;');
         comprobarDestruido();
         return;
     }
@@ -126,21 +132,24 @@ const comprobarDestruido = function(){
         barco.forEach(posicion => {
             if(!posicion[1]){
                 destruido = false;
+                ganar = false;
             }
         });
         if(destruido){
             barco.forEach(posicion => {
                 let marca = document.getElementById(posicion[0]);
-                marca.setAttribute('style', 'background-color:black');
+                marca.setAttribute('style', 'background-image:url('+posicion[2]+'.png);background-size:100% 100%;');
             });
-            if(!barco[barco.length]){
+            if(barco[barco.length]){
                 ganar = false;
             }
         }
     });
-    ganar();
+    if(ganar){
+        victoria();
+    }
 }
 
-const ganar = function(){
+function victoria(){
     alert('Enhorabuena');
 }
